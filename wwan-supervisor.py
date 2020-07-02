@@ -1,9 +1,6 @@
-from subprocess import run
-import time
 from datetime import datetime
-import json
 from ipaddress import ip_interface
-import shlex
+import json, shlex, subprocess, time, traceback
 
 
 # reference: rooter/package/rooter/0drivers/rqmi/files/usr/lib/rooter/qmi/connectqmi.sh
@@ -54,14 +51,15 @@ def fix_network():
 
 
 while True:
-    status = run_cmd(f'{UQMI} --get-data-status')
-    if status != '"connected"':
-        log(f'INFO: DATA_STATUS={status}')
-        try:
+    try:
+        status = run_cmd(f'{UQMI} --get-data-status')
+        if status != '"connected"':
+            log(f'INFO: DATA_STATUS={status}')
             fix_network()
-        except Exception as e:
-            log('ERROR: <<<')
-            traceback.print_exc()
-            log('ERROR: >>>')
-    else:
-        time.sleep(3)
+    except Exception:
+        log('ERROR: <<<')
+        traceback.print_exc()
+        log('ERROR: >>>')
+    except KeyboardInterrupt:
+        log('INFO: Exiting...')
+    time.sleep(3)
