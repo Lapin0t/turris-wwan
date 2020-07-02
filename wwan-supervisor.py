@@ -21,7 +21,7 @@ def run_cmd(cmd):
 
 def fix_network():
     log('INFO: Stopping network...')
-    run_cmd('{UQMI} --stop-network 0xffffffff --autoconnect')
+    run_cmd(f'{UQMI} --stop-network 0xffffffff --autoconnect')
 
     log(f'INFO: Starting network, APN={APN}')
     cid = run_cmd(f'{UQMI} --get-client-id wds')
