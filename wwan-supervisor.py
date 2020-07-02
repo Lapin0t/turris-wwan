@@ -2,6 +2,7 @@ from subprocess import run
 import time
 import json
 from ipaddress import ip_interface
+import shlex
 
 
 #--------------------
@@ -54,46 +55,51 @@ from ipaddress import ip_interface
 # 
 
 
-ENV = {
-    'uqmi': '/sbin/uqmi -s -d /dev/cdc-wdm0',
-    'ifc': 'wwan0',
-    'apn': 'free',
-}
+DEV = '/dev/cdc-wdm0'
+UQMI = f'/sbin/uqmi -s -d {DEV}'
+IFACE = 'wwan0'
+APN =  'free'
 
 
-def run_cmd(cmd, **args):
-    esc = {k: shlex.quote(v) for (k, v) in args.items()}
-    proc = subprocess.run(
-        shlex.split(cmd.format(**esc, **ENV)),
-        capture_output=True, text=True)
-    return proc.stdout
+def run_cmd(cmd):
+    #proc = subprocess.run(
+    #    shlex.split(cmd.format(**esc, **ENV)),
+    #    capture_output=True, text=True)
+    #return proc.stdout
+    print('CMD: ', shlex.split(cmd))
+    return 'PLACEHOLDER'
     
 
 def fix_network():
     print('Stopping network...')
-    run_cmd('{uqmi} --stop-network 0xffffffff --autoconnect')
+    run_cmd('{UQMI} --stop-network 0xffffffff --autoconnect')
     # TODO check shutdown/delay
 
-    print('Starting network...')
-    cid = run_cmd('{uqmi} --get-client-id wds')
-    print('QMI Client ID: {cid}, APN: {apn}'.format(cid, apn=ENV['apn']))
-    run_cmd('{uqmi} --set-client-id wds,{cid} --start-network --apn {apn} --auth-type none --autoconnect', cid=cid)
+    print(f'Starting network, APN: {APN}')
+    cid = run_cmd(f'{UQMI} --get-client-id wds')
+    run_cmd(f'{UQMI} --set-client-id wds,{cid} --start-network {APN} --auth-type none --autoconnect')
 
     # TODO: check failure/delay
 
-    conf = json.loads(run_cmd('{uqmi} --get-current-settings'))['ipv4']
-    addr = ip_interface('{}/{}'.format(conf['ip'], conf['subnet']))
-    gw = conf['gateway']
+    conf = run_cmd(f'{UQMI} --set-client-id wds,{cid} --get-current-settings')
+    #conf = json.loads(run_cmd('{uqmi} --get-current-settings'))
+    #addr = ip_interface('{}/{}'.format(conf['ipv4']['ip'], conf['ipv4']['subnet']))
+    #gw = conf['ipv4']['gateway']
+    addr_o = ip_interface('{}/{}'.format('192.168.0.10', '255.255.255.0'))
+    network = addr_o.network
+    address = str(addr_o)
 
-    print('IP: {addr}, gateway: {gw}', ip=addr, gw=gw)
+    gateway = '192.168.0.254'
 
-    run_cmd('/sbin/ip address flush dev {ifc}')
-    run_cmd('/sbin/ip route flush dev {ifc}')
+    print(f'IP: {address}, gateway: {gateway}')
 
-    run_cmd('/sbin/ip address add {addr} dev {ifc}')
-    run_cmd('/sbin/ip route add {gw} dev {ifc}', gw=gw)
-    run_cmd('/sbin/ip route add {gw} dev {ifc}', gw=gw)
+    run_cmd(f'/sbin/ip address flush dev {IFACE}')
+    run_cmd(f'/sbin/ip route flush dev {IFACE}')
 
-while 1:
-    fix_network()
+    run_cmd(f'/sbin/ip address add {address} dev {IFACE}')
+    run_cmd(f'/sbin/ip route add {gateway} dev {IFACE}')
+    run_cmd(f'/sbin/ip route add {network} via {gateway} dev {IFACE}')
 
+
+
+fix_network()
