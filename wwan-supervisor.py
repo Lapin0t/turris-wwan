@@ -58,7 +58,7 @@ while True:
             fix_network()
     except Exception:
         log('ERROR: <<<')
-        traceback.print_exc()
+        traceback.print_exc(file=sys.stdout)
         log('ERROR: >>>')
     except KeyboardInterrupt:
         log('INFO: Exiting...')
