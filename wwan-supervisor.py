@@ -1,6 +1,6 @@
 from datetime import datetime
 from ipaddress import ip_interface
-import json, shlex, subprocess, time, traceback
+import json, shlex, subprocess, time, traceback, sys
 
 
 # reference: rooter/package/rooter/0drivers/rqmi/files/usr/lib/rooter/qmi/connectqmi.sh
@@ -11,7 +11,7 @@ IFACE = 'wwan0'
 APN =  'free'
 
 def log(msg):
-    print('{} {}'.format(datetime.now(), msg))
+    sys.stdout.write('{} {}\n'.format(datetime.now(), msg))
 
 def run_cmd(cmd):
     log(f'DEBUG: CMD={cmd}')
