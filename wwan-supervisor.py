@@ -62,4 +62,5 @@ while True:
         log('ERROR: >>>')
     except KeyboardInterrupt:
         log('INFO: Exiting...')
+    sys.stdout.flush()
     time.sleep(3)
