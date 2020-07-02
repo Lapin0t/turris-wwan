@@ -1,5 +1,6 @@
 from subprocess import run
 import time
+from datetime import datetime
 import json
 from ipaddress import ip_interface
 import shlex
@@ -8,13 +9,12 @@ import shlex
 # reference: rooter/package/rooter/0drivers/rqmi/files/usr/lib/rooter/qmi/connectqmi.sh
 
 
-DEV = '/dev/cdc-wdm0'
-UQMI = f'/sbin/uqmi -s -d {DEV}'
+UQMI = '/sbin/uqmi -s -d /dev/cdc-wdm0'
 IFACE = 'wwan0'
 APN =  'free'
 
 def log(msg):
-    print('{} {}'.format(now(), msg))
+    print('{} {}'.format(datetime.now(), msg))
 
 def run_cmd(cmd):
     log(f'DEBUG: CMD={cmd}')
