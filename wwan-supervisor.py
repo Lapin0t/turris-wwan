@@ -14,7 +14,7 @@ def log(msg):
     sys.stdout.write('{} {}\n'.format(datetime.now(), msg))
 
 def run_cmd(cmd):
-    log(f'DEBUG: CMD={cmd}')
+    #log(f'DEBUG: CMD={cmd}')
     proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True)
     return proc.stdout
     
@@ -26,6 +26,7 @@ def fix_network():
     log(f'INFO: Starting network, APN={APN}')
     cid = run_cmd(f'{UQMI} --get-client-id wds')
     run_cmd(f'{UQMI} --set-client-id wds,{cid} --start-network {APN} --auth-type none --autoconnect')
+    log(f'INFO: Done')
 
     return
 
@@ -56,11 +57,9 @@ while True:
         if status != 'connected':
             log(f'INFO: DATA_STATUS={status}')
             fix_network()
+        sys.stdout.flush()
+        time.sleep(3)
     except Exception:
         log('ERROR: <<<')
         traceback.print_exc(file=sys.stdout)
         log('ERROR: >>>')
-    except KeyboardInterrupt:
-        log('INFO: Exiting...')
-    sys.stdout.flush()
-    time.sleep(3)
