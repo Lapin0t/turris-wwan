@@ -13,8 +13,11 @@ APN =  'free'
 def log(msg):
     run_cmd('/bin/logger', '-s', '-t', 'wwan-supervisor', msg)
 
-def run_cmd(*cmd, timeout=5, **kw):
+def run_cmd(*cmd, capture=False, timeout=5, **kw):
     #log(f'DEBUG: CMD={cmd}')
+    if capture:
+        kw['stdout'] = subprocess.PIPE
+        kw['text'] = True
     proc = subprocess.run(cmd, timeout=timeout, **kw)
     return proc
     
@@ -24,7 +27,7 @@ def fix_network():
     run_cmd(*UQMI, '--stop-network', '0xffffffff', '--autoconnect')
 
     log(f'restarting network (apn: {APN})')
-    cid = run_cmd(*UQMI, '--get-client-id', 'wds', stdout=subprocess.PIPE, text=True).stdout
+    cid = run_cmd(*UQMI, '--get-client-id', 'wds', capture=True).stdout
     run_cmd(*UQMI, '--set-client-id', f'wds,{cid}', '--start-network', APN, '--auth-type', 'none', '--autoconnect')
     run_cmd(*UQMI, '--set-client-id', f'wds,{cid}', '--release-client-id')
     log('done')
@@ -54,7 +57,7 @@ def fix_network():
 
 while True:
     try:
-        status = json.loads(run_cmd(*UQMI, '--get-data-status'))
+        status = json.loads(run_cmd(*UQMI, '--get-data-status', capture=True).stdout)
         if status != 'connected':
             log(f'bad status: {status}')
             fix_network()
