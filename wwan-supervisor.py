@@ -54,7 +54,7 @@ def fix_network():
 
 while True:
     try:
-        status = json.loads(run_cmd(f'{UQMI} --get-data-status'))
+        status = json.loads(run_cmd(*UQMI, '--get-data-status'))
         if status != 'connected':
             log(f'bad status: {status}')
             fix_network()
