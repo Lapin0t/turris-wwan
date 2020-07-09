@@ -11,11 +11,11 @@ IFACE = 'wwan0'
 APN =  'free'
 
 def log(msg):
-    run_cmd('/bin/logger', '-s', '-t', 'wwan-supervisor', shlex.quote(msg))
+    run_cmd('/bin/logger', '-s', '-t', 'wwan-supervisor', msg)
 
-def run_cmd(*cmd, capture=True, timeout=5, **kw):
+def run_cmd(*cmd, timeout=5, **kw):
     #log(f'DEBUG: CMD={cmd}')
-    proc = subprocess.run(cmd, capture_output=capture, text=True, timeout=timeout, **kw)
+    proc = subprocess.run(cmd, timeout=timeout, **kw)
     return proc
     
 
@@ -24,7 +24,7 @@ def fix_network():
     run_cmd(*UQMI, '--stop-network', '0xffffffff', '--autoconnect')
 
     log(f'restarting network (apn: {APN})')
-    cid = run_cmd(*UQMI, '--get-client-id', 'wds').stdout
+    cid = run_cmd(*UQMI, '--get-client-id', 'wds', stdout=subprocess.PIPE, text=True).stdout
     run_cmd(*UQMI, '--set-client-id', f'wds,{cid}', '--start-network', APN, '--auth-type', 'none', '--autoconnect')
     run_cmd(*UQMI, '--set-client-id', f'wds,{cid}', '--release-client-id')
     log('done')
@@ -65,4 +65,6 @@ while True:
         for line in traceback.format_exc().splitlines():
             log(f'error: {line}')
     finally:
+        sys.stdout.flush()
+        sys.stderr.flush()
         time.sleep(3)
